@@ -1,5 +1,5 @@
 import type { MovieVideo } from '../../api/movies';
-import { formatInTheaters, pickTrailer, trailerUrl } from '../movieDetails';
+import { formatInTheaters, pickTrailer, trailerUrl } from '../detailContent';
 
 const trailer: MovieVideo = {
   id: '1',

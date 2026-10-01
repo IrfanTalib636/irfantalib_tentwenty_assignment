@@ -1,7 +1,7 @@
-import { render } from '@testing-library/react-native';
+import { fireEvent, render } from '@testing-library/react-native';
 
 import { useMovieDetails, useMovieVideos } from '../../api/movieQueries';
-import { DETAIL_COPY } from '../movieDetails';
+import { DETAIL_COPY } from '../detailContent';
 import { MovieDetailsScreen } from '../MovieDetailsScreen';
 
 jest.mock('@expo/vector-icons', () => ({
@@ -17,8 +17,10 @@ jest.mock('expo-linear-gradient', () => {
   return { LinearGradient: View };
 });
 
+const mockNavigate = jest.fn();
+
 jest.mock('@react-navigation/native', () => ({
-  useNavigation: () => ({ goBack: jest.fn() }),
+  useNavigation: () => ({ goBack: jest.fn(), navigate: mockNavigate }),
   useRoute: () => ({ params: { movieId: 11 } }),
 }));
 
@@ -74,6 +76,10 @@ describe('MovieDetailsScreen', () => {
     expect(getByText('Thriller')).toBeTruthy();
     expect(getByText('A secret agency is formed.')).toBeTruthy();
     expect(getByText(DETAIL_COPY.trailer)).toBeTruthy();
+
+    await fireEvent.press(getByLabelText(DETAIL_COPY.tickets));
+
+    expect(mockNavigate).toHaveBeenCalledWith('MovieTickets', { movieId: 11 });
   });
 
   it('shows an error instead of a blank screen when the movie cannot be loaded', async () => {

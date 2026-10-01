@@ -28,7 +28,7 @@ import {
   GENRE_COLORS,
   pickTrailer,
   trailerUrl,
-} from './movieDetails';
+} from './detailContent';
 
 type DetailsRoute = RouteProp<RootStackParamList, 'MovieDetails'>;
 type DetailsNavigation = NativeStackNavigationProp<RootStackParamList, 'MovieDetails'>;
@@ -130,9 +130,14 @@ export function MovieDetailsScreen() {
             <View style={styles.heroActions}>
               {movie.title ? <Text style={styles.movieName}>{movie.title}</Text> : null}
               <Text style={styles.release}>{formatInTheaters(movie.release_date)}</Text>
-              <View style={styles.tickets}>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={DETAIL_COPY.tickets}
+                onPress={() => navigation.navigate('MovieTickets', { movieId: movie.id })}
+                style={styles.tickets}
+              >
                 <Text style={styles.ticketsLabel}>{DETAIL_COPY.tickets}</Text>
-              </View>
+              </Pressable>
               <Pressable
                 accessibilityRole="button"
                 onPress={() => {
