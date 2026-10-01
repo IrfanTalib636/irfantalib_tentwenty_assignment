@@ -8,6 +8,7 @@ export type Movie = {
   backdrop_path: string | null;
   release_date: string;
   vote_average: number;
+  genre_ids?: number[];
 };
 
 export type MovieListResponse = {
@@ -45,6 +46,17 @@ export type MovieImages = {
   posters: MovieImage[];
 };
 
+export type MovieGenre = {
+  id: number;
+  name: string;
+};
+
+export type GenreCard = {
+  id: number;
+  name: string;
+  backdropPath: string | null;
+};
+
 const language = 'en-US';
 
 export async function getUpcomingMovies(page = 1) {
@@ -72,6 +84,77 @@ export async function getMovieVideos(movieId: number) {
 export async function getMovieImages(movieId: number) {
   const response = await apiClient.get<MovieImages>(`/movie/${movieId}/images`);
   return response.data;
+}
+
+const featuredGenreNames = [
+  'Comedy',
+  'Crime',
+  'Family',
+  'Documentary',
+  'Drama',
+  'Fantasy',
+  'Horror',
+  'Science Fiction',
+  'Thriller',
+] as const;
+
+const genreLabels: Record<string, string> = {
+  Comedy: 'Comedies',
+  Documentary: 'Documentaries',
+  Drama: 'Dramas',
+  'Science Fiction': 'Sci-Fi',
+};
+
+export function genreLabel(name: string) {
+  return genreLabels[name] ?? name;
+}
+
+export async function getMovieGenres() {
+  const response = await apiClient.get<{ genres: MovieGenre[] }>('/genre/movie/list', {
+    params: { language },
+  });
+  return response.data.genres;
+}
+
+export async function getMoviesByGenre(genreId: number, page = 1) {
+  const response = await apiClient.get<MovieListResponse>('/discover/movie', {
+    params: {
+      with_genres: genreId,
+      sort_by: 'popularity.desc',
+      page,
+      language,
+      include_adult: false,
+    },
+  });
+  return response.data;
+}
+
+export async function getGenreCards() {
+  const genres = await getMovieGenres();
+  const featured = featuredGenreNames.flatMap((name) => {
+    const genre = genres.find((item) => item.name === name);
+    return genre ? [genre] : [];
+  });
+
+  return Promise.all(
+    featured.map(async (genre) => {
+      try {
+        const page = await getMoviesByGenre(genre.id);
+        const sample = page.results.find((movie) => movie.backdrop_path) ?? page.results[0];
+        return {
+          id: genre.id,
+          name: genreLabel(genre.name),
+          backdropPath: sample?.backdrop_path ?? sample?.poster_path ?? null,
+        };
+      } catch {
+        return {
+          id: genre.id,
+          name: genreLabel(genre.name),
+          backdropPath: null,
+        };
+      }
+    }),
+  );
 }
 
 export async function searchMovies(query: string, page = 1) {

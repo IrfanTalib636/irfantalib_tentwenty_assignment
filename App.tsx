@@ -1,15 +1,17 @@
+import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
 import { NavigationContainer } from '@react-navigation/native';
-import { QueryClientProvider } from '@tanstack/react-query';
 import { StatusBar } from 'expo-status-bar';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
-import { queryClient } from './src/api/queryClient';
+import { ONE_DAY, queryClient, queryPersister } from './src/api/queryClient';
+import { setupQueryLifecycle } from './src/api/queryLifecycle';
 import { usePoppins } from './src/fonts/usePoppins';
-import { TabNavigator } from './src/navigation/TabNavigator';
+import { RootNavigator } from './src/navigation/RootNavigator';
 
 SplashScreen.preventAutoHideAsync();
+setupQueryLifecycle();
 
 export default function App() {
   const [fontsLoaded, fontError] = usePoppins();
@@ -26,12 +28,15 @@ export default function App() {
 
   return (
     <SafeAreaProvider>
-      <QueryClientProvider client={queryClient}>
+      <PersistQueryClientProvider
+        client={queryClient}
+        persistOptions={{ persister: queryPersister, maxAge: ONE_DAY }}
+      >
         <NavigationContainer>
           <StatusBar style="dark" />
-          <TabNavigator />
+          <RootNavigator />
         </NavigationContainer>
-      </QueryClientProvider>
+      </PersistQueryClientProvider>
     </SafeAreaProvider>
   );
 }

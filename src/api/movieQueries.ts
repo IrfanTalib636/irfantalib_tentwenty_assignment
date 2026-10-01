@@ -1,17 +1,22 @@
-import { useQuery } from '@tanstack/react-query';
+import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 
 import {
+  getGenreCards,
   getMovieDetails,
   getMovieImages,
+  getMoviesByGenre,
   getMovieVideos,
   getUpcomingMovies,
   searchMovies,
 } from './movies';
 
-export function useUpcomingMovies(page = 1) {
-  return useQuery({
-    queryKey: ['movies', 'upcoming', page],
-    queryFn: () => getUpcomingMovies(page),
+export function useUpcomingMovies() {
+  return useInfiniteQuery({
+    queryKey: ['movies', 'upcoming'],
+    queryFn: ({ pageParam }) => getUpcomingMovies(pageParam),
+    initialPageParam: 1,
+    getNextPageParam: (lastPage) =>
+      lastPage.page < lastPage.total_pages ? lastPage.page + 1 : undefined,
   });
 }
 
@@ -39,12 +44,31 @@ export function useMovieImages(movieId: number) {
   });
 }
 
-export function useMovieSearch(query: string, page = 1) {
+export function useGenreBrowse(enabled: boolean) {
+  return useQuery({
+    queryKey: ['movies', 'genres'],
+    queryFn: getGenreCards,
+    enabled,
+  });
+}
+
+export function useGenreMovies(genreId: number) {
+  return useQuery({
+    queryKey: ['movies', 'genre', genreId],
+    queryFn: () => getMoviesByGenre(genreId),
+    enabled: genreId > 0,
+  });
+}
+
+export function useMovieSearch(query: string) {
   const trimmed = query.trim();
 
-  return useQuery({
-    queryKey: ['movies', 'search', trimmed, page],
-    queryFn: () => searchMovies(trimmed, page),
+  return useInfiniteQuery({
+    queryKey: ['movies', 'search', trimmed],
+    queryFn: ({ pageParam }) => searchMovies(trimmed, pageParam),
+    initialPageParam: 1,
+    getNextPageParam: (lastPage) =>
+      lastPage.page < lastPage.total_pages ? lastPage.page + 1 : undefined,
     enabled: trimmed.length > 0,
   });
 }

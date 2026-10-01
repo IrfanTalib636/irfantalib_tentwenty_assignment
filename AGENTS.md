@@ -1,5 +1,17 @@
 This is an Expo/React Native mobile application. Prioritize mobile-first patterns, performance, and cross-platform compatibility.
 
+## Project requirements
+
+- TypeScript is mandatory. New screens, hooks, and modules are `.ts` or `.tsx`. Functional components and hooks only.
+- Stay on the New Architecture. Do not add legacy-bridge workarounds or disable `newArchEnabled`.
+- Android builds target API 36. iOS deployment target stays at 16.4, the lowest version Expo SDK 57 supports, which still covers the iOS 15+ requirement for every device this SDK can ship to.
+- The app must run in portrait and landscape. Layouts adapt with `useWindowDimensions` rather than a fixed phone width.
+- Data screens are offline-first. Persist the React Query cache, use `networkMode: 'offlineFirst'`, and refetch when the connection returns. Show saved data when a refresh fails.
+- Every screen designs loading, empty, and error. Do not leave a blank view for a missing or failed request.
+- Tests describe behaviour. Add them beside the code in `__tests__` files named `*-test.ts` or `*-test.tsx`, and run `npm test`.
+
+The running navigation is React Navigation bottom tabs. Do not replace it with Expo Router unless asked.
+
 ## Expo has changed — do not trust your training data
 
 Expo ships breaking changes every SDK release. APIs you remember are likely renamed, moved, or removed. Before writing any code that touches an Expo, EAS, or React Native API:
