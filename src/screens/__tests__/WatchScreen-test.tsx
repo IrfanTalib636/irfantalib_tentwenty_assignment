@@ -66,21 +66,29 @@ describe('WatchScreen', () => {
     } as unknown as ReturnType<typeof useGenreBrowse>);
     useGenreMoviesMock.mockReturnValue({
       ...idleQuery,
+      hasNextPage: false,
+      isFetchingNextPage: false,
+      fetchNextPage: jest.fn(),
       data: {
-        page: 1,
-        total_pages: 1,
-        total_results: 1,
-        results: [
+        pages: [
           {
-            id: 99,
-            title: 'Superbad',
-            overview: '',
-            poster_path: null,
-            backdrop_path: '/super.jpg',
-            release_date: '2007-08-17',
-            vote_average: 7,
+            page: 1,
+            total_pages: 1,
+            total_results: 1,
+            results: [
+              {
+                id: 99,
+                title: 'Superbad',
+                overview: '',
+                poster_path: null,
+                backdrop_path: '/super.jpg',
+                release_date: '2007-08-17',
+                vote_average: 7,
+              },
+            ],
           },
         ],
+        pageParams: [1],
       },
     } as unknown as ReturnType<typeof useGenreMovies>);
     useMovieSearchMock.mockReturnValue(idleQuery as unknown as ReturnType<typeof useMovieSearch>);

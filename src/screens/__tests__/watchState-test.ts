@@ -2,6 +2,7 @@ import {
   getWatchViewState,
   loadMoreMovies,
   MOVIE_PAGE_SIZE,
+  uniqueMovies,
   visibleMovies,
   WATCH_COPY,
 } from '../watchState';
@@ -86,6 +87,13 @@ describe('getWatchViewState', () => {
     expect(visibleMovies(movies, MOVIE_PAGE_SIZE * 3)).toHaveLength(25);
   });
 
+  it('keeps one copy when the same movie arrives on more than one page', () => {
+    expect(uniqueMovies([movie, { ...movie, title: 'Free Guy again' }, { ...movie, id: 2 }])).toEqual([
+      movie,
+      { ...movie, id: 2 },
+    ]);
+  });
+
   it('asks for the next API page only after the loaded movies are used up', () => {
     expect(
       loadMoreMovies({
@@ -113,6 +121,24 @@ describe('getWatchViewState', () => {
         isFetching: true,
       }),
     ).toEqual({ visibleCount: 10, fetchNext: false });
+
+    expect(
+      loadMoreMovies({
+        visibleCount: 20,
+        loadedCount: 25,
+        hasNextPage: false,
+        isFetching: false,
+      }),
+    ).toEqual({ visibleCount: 25, fetchNext: false });
+
+    expect(
+      loadMoreMovies({
+        visibleCount: 25,
+        loadedCount: 25,
+        hasNextPage: false,
+        isFetching: false,
+      }),
+    ).toEqual({ visibleCount: 25, fetchNext: false });
   });
 
   it('shows an empty list without pretending the request failed', () => {

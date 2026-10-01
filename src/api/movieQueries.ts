@@ -53,9 +53,12 @@ export function useGenreBrowse(enabled: boolean) {
 }
 
 export function useGenreMovies(genreId: number) {
-  return useQuery({
-    queryKey: ['movies', 'genre', genreId],
-    queryFn: () => getMoviesByGenre(genreId),
+  return useInfiniteQuery({
+    queryKey: ['movies', 'by-genre', genreId],
+    queryFn: ({ pageParam }) => getMoviesByGenre(genreId, pageParam),
+    initialPageParam: 1,
+    getNextPageParam: (lastPage) =>
+      lastPage.page < lastPage.total_pages ? lastPage.page + 1 : undefined,
     enabled: genreId > 0,
   });
 }
@@ -64,7 +67,7 @@ export function useMovieSearch(query: string) {
   const trimmed = query.trim();
 
   return useInfiniteQuery({
-    queryKey: ['movies', 'search', trimmed],
+    queryKey: ['movies', 'search-pages', trimmed],
     queryFn: ({ pageParam }) => searchMovies(trimmed, pageParam),
     initialPageParam: 1,
     getNextPageParam: (lastPage) =>

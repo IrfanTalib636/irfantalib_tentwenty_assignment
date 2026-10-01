@@ -3,11 +3,12 @@ import { useNavigation, useRoute, type RouteProp } from '@react-navigation/nativ
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Image,
-  Linking,
+  Modal,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -15,6 +16,7 @@ import {
   useWindowDimensions,
   View,
 } from 'react-native';
+import { WebView } from 'react-native-webview';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { getImageUrl } from '../api/images';
@@ -26,9 +28,14 @@ import {
   detailErrorMessage,
   formatInTheaters,
   GENRE_COLORS,
-  pickTrailer,
-  trailerUrl,
+  trailerCandidates,
 } from './detailContent';
+import {
+  findPlayableTrailer,
+  readTrailerPlayerSignal,
+  TRAILER_EMBED_ORIGIN,
+  trailerPlayerHtml,
+} from './trailerPlayer';
 
 type DetailsRoute = RouteProp<RootStackParamList, 'MovieDetails'>;
 type DetailsNavigation = NativeStackNavigationProp<RootStackParamList, 'MovieDetails'>;
@@ -42,9 +49,16 @@ export function MovieDetailsScreen() {
   const details = useMovieDetails(movieId);
   const videos = useMovieVideos(movieId);
   const [trailerError, setTrailerError] = useState<string | null>(null);
+  const [playerOpen, setPlayerOpen] = useState(false);
+  const [trailerKey, setTrailerKey] = useState<string | null>(null);
+  const [trailerReady, setTrailerReady] = useState(false);
+  const trailerRequest = useRef(0);
+  const remainingKeys = useRef<string[]>([]);
   const movie = details.data;
   const heroHeight = width > height ? Math.max(height * 0.72, 320) : Math.min(height * 0.62, 520);
-  const trailer = pickTrailer(videos.data ?? []);
+  const trailerKeys = trailerCandidates(videos.data ?? [])
+    .map((video) => video.key)
+    .filter((key) => trailerPlayerHtml(key));
 
   useEffect(() => {
     if (movie) {
@@ -58,14 +72,47 @@ export function MovieDetailsScreen() {
     }
   }, [videos.data]);
 
-  async function openTrailer() {
-    if (!trailer) {
+  async function playFrom(keys: string[], unavailableMessage: string) {
+    const request = ++trailerRequest.current;
+    setTrailerReady(false);
+    setTrailerKey(null);
+    const playable = await findPlayableTrailer(keys);
+    if (request !== trailerRequest.current) {
+      return;
+    }
+
+    if (!playable) {
+      setPlayerOpen(false);
+      setTrailerError(unavailableMessage);
+      return;
+    }
+
+    remainingKeys.current = keys.slice(keys.indexOf(playable) + 1);
+    setTrailerKey(playable);
+  }
+
+  function openTrailer() {
+    if (videos.isPending) {
+      setTrailerError('The trailer is still loading.');
+      return;
+    }
+
+    if (trailerKeys.length === 0) {
       setTrailerError('No trailer is available for this movie.');
       return;
     }
 
     setTrailerError(null);
-    await Linking.openURL(trailerUrl(trailer.key));
+    setPlayerOpen(true);
+    void playFrom(trailerKeys, 'No trailer is available for this movie.');
+  }
+
+  function closeTrailer() {
+    trailerRequest.current += 1;
+    remainingKeys.current = [];
+    setPlayerOpen(false);
+    setTrailerKey(null);
+    setTrailerReady(false);
   }
 
   return (
@@ -140,9 +187,7 @@ export function MovieDetailsScreen() {
               </Pressable>
               <Pressable
                 accessibilityRole="button"
-                onPress={() => {
-                  void openTrailer();
-                }}
+                onPress={openTrailer}
                 style={styles.trailer}
               >
                 <Ionicons name="play" size={14} color="#FFFFFF" />
@@ -175,6 +220,68 @@ export function MovieDetailsScreen() {
             </Text>
           </View>
         </ScrollView>
+      ) : null}
+
+      {playerOpen ? (
+        <Modal
+          visible
+          animationType="fade"
+          statusBarTranslucent
+          supportedOrientations={['portrait', 'landscape']}
+          onRequestClose={closeTrailer}
+        >
+          <View style={styles.player}>
+            <StatusBar style="light" />
+            {trailerKey && trailerPlayerHtml(trailerKey) ? (
+            <WebView
+              style={styles.playerVideo}
+              source={{
+                html: trailerPlayerHtml(trailerKey) ?? '',
+                baseUrl: TRAILER_EMBED_ORIGIN,
+              }}
+              originWhitelist={['*']}
+              allowsFullscreenVideo
+              allowsInlineMediaPlayback
+              mediaPlaybackRequiresUserAction={false}
+              javaScriptEnabled
+              domStorageEnabled
+              userAgent={
+                Platform.OS === 'android'
+                  ? 'Mozilla/5.0 (Linux; Android 13; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.6099.230 Mobile Safari/537.36'
+                  : undefined
+              }
+              onMessage={(event) => {
+                const signal = readTrailerPlayerSignal(event.nativeEvent.data);
+                if (signal === 'ready') {
+                  setTrailerReady(true);
+                  return;
+                }
+                if (signal === 'error') {
+                  void playFrom(remainingKeys.current, 'This trailer could not be played.');
+                  return;
+                }
+                if (signal === 'ended') {
+                  closeTrailer();
+                }
+              }}
+            />
+            ) : null}
+            {trailerReady ? null : (
+              <View style={styles.playerLoading} pointerEvents="none">
+                <ActivityIndicator color="#FFFFFF" />
+              </View>
+            )}
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Close trailer"
+              onPress={closeTrailer}
+              hitSlop={8}
+              style={[styles.playerClose, { top: insets.top + 12 }]}
+            >
+              <Ionicons name="close" size={28} color="#FFFFFF" />
+            </Pressable>
+          </View>
+        </Modal>
       ) : null}
 
       {!movie ? (
@@ -314,6 +421,29 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#FFFFFF',
     textAlign: 'center',
+  },
+  player: {
+    flex: 1,
+    backgroundColor: '#000000',
+  },
+  playerVideo: {
+    flex: 1,
+    backgroundColor: '#000000',
+  },
+  playerLoading: {
+    ...StyleSheet.absoluteFill,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  playerClose: {
+    position: 'absolute',
+    right: 16,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(0,0,0,0.45)',
   },
   sheet: {
     marginTop: -28,

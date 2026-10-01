@@ -17,6 +17,26 @@ jest.mock('expo-linear-gradient', () => {
   return { LinearGradient: View };
 });
 
+jest.mock('react-native-webview', () => {
+  const { createElement } = require('react');
+  const { Pressable, Text } = require('react-native');
+  return {
+    WebView: ({
+      onMessage,
+    }: {
+      onMessage?: (event: { nativeEvent: { data: string } }) => void;
+    }) =>
+      createElement(
+        Pressable,
+        {
+          accessibilityLabel: 'Trailer player',
+          onPress: () => onMessage?.({ nativeEvent: { data: 'ended' } }),
+        },
+        createElement(Text, null, 'Playing trailer'),
+      ),
+  };
+});
+
 const mockNavigate = jest.fn();
 
 jest.mock('@react-navigation/native', () => ({
@@ -80,6 +100,67 @@ describe('MovieDetailsScreen', () => {
     await fireEvent.press(getByLabelText(DETAIL_COPY.tickets));
 
     expect(mockNavigate).toHaveBeenCalledWith('MovieTickets', { movieId: 11 });
+  });
+
+  it('plays the trailer in the app and returns to the details when it ends', async () => {
+    useMovieDetailsMock.mockReturnValue({
+      data: {
+        id: 11,
+        title: "The King's Man",
+        overview: 'A secret agency is formed.',
+        poster_path: null,
+        backdrop_path: '/king.jpg',
+        release_date: '2021-12-22',
+        vote_average: 7,
+        runtime: 131,
+        status: 'Released',
+        tagline: '',
+        genres: [],
+      },
+      isPending: false,
+      isError: false,
+      error: null,
+      refetch: jest.fn(),
+    } as unknown as ReturnType<typeof useMovieDetails>);
+    useMovieVideosMock.mockReturnValue({
+      data: [
+        {
+          id: '1',
+          key: 'abc12345',
+          name: 'Official Trailer',
+          site: 'YouTube',
+          type: 'Trailer',
+          official: true,
+        },
+      ],
+      isPending: false,
+      isError: false,
+    } as unknown as ReturnType<typeof useMovieVideos>);
+
+    const originalFetch = globalThis.fetch;
+    globalThis.fetch = jest.fn(async () => ({ ok: true })) as unknown as typeof fetch;
+
+    try {
+      const screen = await render(<MovieDetailsScreen />);
+
+      await fireEvent.press(screen.getByText(DETAIL_COPY.trailer));
+
+      expect(await screen.findByLabelText('Trailer player')).toBeTruthy();
+      expect(screen.getByLabelText('Close trailer')).toBeTruthy();
+
+      await fireEvent.press(screen.getByLabelText('Close trailer'));
+
+      expect(screen.queryByLabelText('Trailer player')).toBeNull();
+      expect(screen.getByText("The King's Man")).toBeTruthy();
+
+      await fireEvent.press(screen.getByText(DETAIL_COPY.trailer));
+      await fireEvent.press(await screen.findByLabelText('Trailer player'));
+
+      expect(screen.queryByLabelText('Trailer player')).toBeNull();
+      expect(screen.getByText("The King's Man")).toBeTruthy();
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
   });
 
   it('shows an error instead of a blank screen when the movie cannot be loaded', async () => {

@@ -51,15 +51,17 @@ export function formatInTheaters(releaseDate: string) {
   return `In Theaters ${month} ${Number(match[3])}, ${match[1]}`;
 }
 
-export function pickTrailer(videos: MovieVideo[]) {
+export function trailerCandidates(videos: MovieVideo[]) {
   const youtube = videos.filter((video) => video.site === 'YouTube' && video.key);
+  const officialTrailers = youtube.filter((video) => video.type === 'Trailer' && video.official);
+  const otherTrailers = youtube.filter((video) => video.type === 'Trailer' && !video.official);
+  const otherVideos = youtube.filter((video) => video.type !== 'Trailer');
 
-  return (
-    youtube.find((video) => video.type === 'Trailer' && video.official) ??
-    youtube.find((video) => video.type === 'Trailer') ??
-    youtube[0] ??
-    null
-  );
+  return [...officialTrailers, ...otherTrailers, ...otherVideos];
+}
+
+export function pickTrailer(videos: MovieVideo[]) {
+  return trailerCandidates(videos)[0] ?? null;
 }
 
 export function trailerUrl(videoKey: string) {

@@ -34,7 +34,14 @@ import {
   SEARCH_PLACEHOLDER,
   TOP_RESULTS_LABEL,
 } from './genreBrowse';
-import { getWatchViewState, loadMoreMovies, MOVIE_PAGE_SIZE, visibleMovies, WATCH_COPY } from './watchState';
+import {
+  getWatchViewState,
+  MOVIE_PAGE_SIZE,
+  uniqueMovies,
+  useMoviePage,
+  visibleMovies,
+  WATCH_COPY,
+} from './watchState';
 
 const SEARCH_DELAY_MS = 300;
 
@@ -160,17 +167,18 @@ export function WatchScreen() {
   const netInfo = useNetInfo();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const query = useUpcomingMovies();
-  const [requestedCount, setRequestedCount] = useState(MOVIE_PAGE_SIZE);
-  const [searchWindow, setSearchWindow] = useState({ query: '', count: MOVIE_PAGE_SIZE });
+  const upcomingPage = useMoviePage('upcoming');
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchText, setSearchText] = useState('');
   const [searchSubmitted, setSearchSubmitted] = useState(false);
   const [selectedGenreId, setSelectedGenreId] = useState(0);
   const debouncedQuery = useDebouncedValue(searchText.trim(), SEARCH_DELAY_MS);
+  const searchPage = useMoviePage(debouncedQuery);
   const genres = useGenreBrowse(searchOpen);
   const genreMovies = useGenreMovies(searchOpen ? selectedGenreId : 0);
+  const genrePage = useMoviePage(selectedGenreId);
   const search = useMovieSearch(searchOpen ? debouncedQuery : '');
-  const loadedMovies = query.data?.pages.flatMap((page) => page.results) ?? [];
+  const loadedMovies = uniqueMovies(query.data?.pages?.flatMap((page) => page.results) ?? []);
   const isLandscape = width > height;
   const columns = width >= 700 ? 2 : 1;
   const cardHeight = isLandscape ? 160 : 180;
@@ -178,14 +186,17 @@ export function WatchScreen() {
   const genreCardWidth = (listWidth - 40 - 12) / 2;
   const genreCardHeight = isLandscape ? 96 : 108;
   const trimmedSearch = searchText.trim();
-  const loadedSearchMovies = search.data?.pages.flatMap((page) => page.results) ?? [];
+  const loadedSearchMovies = uniqueMovies(
+    search.data?.pages?.flatMap((page) => page.results) ?? [],
+  );
+  const loadedGenreMovies = uniqueMovies(
+    genreMovies.data?.pages?.flatMap((page) => page.results) ?? [],
+  );
   const searchTotal =
     debouncedQuery === trimmedSearch ? (search.data?.pages[0]?.total_results ?? null) : null;
-  const searchVisibleCount =
-    searchWindow.query === debouncedQuery ? searchWindow.count : MOVIE_PAGE_SIZE;
   const offline = netInfo.isConnected === false;
   const view = getWatchViewState({
-    movies: visibleMovies(loadedMovies, requestedCount),
+    movies: visibleMovies(loadedMovies, upcomingPage.visibleCount),
     isPending: query.isPending,
     isPaused: query.fetchStatus === 'paused',
     isError: query.isError,
@@ -202,7 +213,7 @@ export function WatchScreen() {
     copy: GENRE_COPY,
   });
   const genreMovieView = getBrowseViewState({
-    items: genreMovies.data?.results ?? [],
+    items: visibleMovies(loadedGenreMovies, genrePage.visibleCount),
     isPending: genreMovies.isPending,
     isPaused: genreMovies.fetchStatus === 'paused',
     isError: genreMovies.isError,
@@ -213,7 +224,7 @@ export function WatchScreen() {
   const searchView = getBrowseViewState({
     items:
       debouncedQuery === trimmedSearch
-        ? visibleMovies(loadedSearchMovies, searchVisibleCount)
+        ? visibleMovies(loadedSearchMovies, searchPage.visibleCount)
         : [],
     isPending: debouncedQuery !== trimmedSearch || search.isPending,
     isPaused: search.fetchStatus === 'paused',
@@ -346,17 +357,12 @@ export function WatchScreen() {
                 maxToRenderPerBatch={MOVIE_PAGE_SIZE}
                 onEndReachedThreshold={0.4}
                 onEndReached={() => {
-                  const next = loadMoreMovies({
-                    visibleCount: searchVisibleCount,
+                  searchPage.revealMore({
                     loadedCount: loadedSearchMovies.length,
                     hasNextPage: Boolean(search.hasNextPage),
                     isFetching: search.isFetchingNextPage,
+                    fetchNext: () => search.fetchNextPage(),
                   });
-                  setSearchWindow({ query: debouncedQuery, count: next.visibleCount });
-
-                  if (next.fetchNext) {
-                    void search.fetchNextPage();
-                  }
                 }}
                 ListFooterComponent={
                   search.isFetchingNextPage ? (
@@ -384,6 +390,15 @@ export function WatchScreen() {
               cardHeight={cardHeight}
               listPadding={listPadding}
               onPress={openMovie}
+              onEndReached={() => {
+                genrePage.revealMore({
+                  loadedCount: loadedGenreMovies.length,
+                  hasNextPage: Boolean(genreMovies.hasNextPage),
+                  isFetching: genreMovies.isFetchingNextPage,
+                  fetchNext: () => genreMovies.fetchNextPage(),
+                });
+              }}
+              fetchingMore={genreMovies.isFetchingNextPage}
             />
           )}
         />
@@ -471,17 +486,12 @@ export function WatchScreen() {
             maxToRenderPerBatch={MOVIE_PAGE_SIZE}
             onEndReachedThreshold={0.4}
             onEndReached={() => {
-              const next = loadMoreMovies({
-                visibleCount: requestedCount,
+              upcomingPage.revealMore({
                 loadedCount: loadedMovies.length,
                 hasNextPage: Boolean(query.hasNextPage),
                 isFetching: query.isFetchingNextPage,
+                fetchNext: () => query.fetchNextPage(),
               });
-              setRequestedCount(next.visibleCount);
-
-              if (next.fetchNext) {
-                void query.fetchNextPage();
-              }
             }}
             ListFooterComponent={
               query.isFetchingNextPage ? (
@@ -490,7 +500,7 @@ export function WatchScreen() {
             }
             refreshing={query.isRefetching && !query.isPending}
             onRefresh={() => {
-              setRequestedCount(MOVIE_PAGE_SIZE);
+              upcomingPage.reset();
               void query.refetch();
             }}
           />
@@ -550,6 +560,8 @@ function MovieList({
   cardHeight,
   listPadding,
   onPress,
+  onEndReached,
+  fetchingMore,
 }: {
   movies: Movie[];
   notice: string | null;
@@ -557,6 +569,8 @@ function MovieList({
   cardHeight: number;
   listPadding: { paddingBottom: number };
   onPress: (movie: Movie) => void;
+  onEndReached: () => void;
+  fetchingMore: boolean;
 }) {
   return (
     <View style={styles.listFrame}>
@@ -573,6 +587,13 @@ function MovieList({
         contentContainerStyle={[styles.list, listPadding]}
         ItemSeparatorComponent={() => <View style={styles.separator} />}
         showsVerticalScrollIndicator={false}
+        initialNumToRender={MOVIE_PAGE_SIZE}
+        maxToRenderPerBatch={MOVIE_PAGE_SIZE}
+        onEndReachedThreshold={0.4}
+        onEndReached={onEndReached}
+        ListFooterComponent={
+          fetchingMore ? <ActivityIndicator color={COLORS.DARK} style={styles.footer} /> : null
+        }
       />
     </View>
   );
