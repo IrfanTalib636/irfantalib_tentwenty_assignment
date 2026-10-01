@@ -22,7 +22,6 @@ import { DETAIL_COPY, detailErrorMessage } from './detailContent';
 import { SEAT_COPY, SEAT_ROW_MARKS, seatSessionLabel } from './seatSession';
 
 const seatsImage = require('../assets/images/seatsImage.png');
-const SEAT_MAP_GREY = '#E6E6EB';
 const IMAGE_RATIO = 570 / 987;
 const MIN_ZOOM = 1;
 const MAX_ZOOM = 1.6;
@@ -147,7 +146,7 @@ export function SeatMapScreen() {
                 <LegendItem color={COLORS.PURPLE} label={SEAT_COPY.vip} />
               </View>
               <View style={styles.legendColumn}>
-                <LegendItem color="#C5C5CB" label={SEAT_COPY.unavailable} />
+                <LegendItem color={COLORS.UNAVAILABLE} label={SEAT_COPY.unavailable} />
                 <LegendItem color={COLORS.BLUE} label={SEAT_COPY.regular} />
               </View>
             </View>
@@ -196,10 +195,10 @@ function LegendItem({ color, label }: { color: string; label: string }) {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: SEAT_MAP_GREY,
+    backgroundColor: COLORS.SEAT_GREY,
   },
   header: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: COLORS.PURE_WHITE,
   },
   headerBar: {
     minHeight: 72,
@@ -234,7 +233,7 @@ const styles = StyleSheet.create({
   },
   body: {
     flex: 1,
-    backgroundColor: SEAT_MAP_GREY,
+    backgroundColor: COLORS.SEAT_GREY,
   },
   bodyContent: {
     flexGrow: 1,
@@ -244,11 +243,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     overflow: 'hidden',
-    backgroundColor: SEAT_MAP_GREY,
+    backgroundColor: COLORS.SEAT_GREY,
   },
   seats: {
     position: 'absolute',
-    backgroundColor: 'transparent',
+    backgroundColor: COLORS.TRANSPARENT,
   },
   rowNumber: {
     position: 'absolute',
@@ -271,8 +270,8 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#FFFFFF',
-    shadowColor: '#000000',
+    backgroundColor: COLORS.PURE_WHITE,
+    shadowColor: COLORS.BLACK,
     shadowOpacity: 0.12,
     shadowRadius: 6,
     shadowOffset: { width: 0, height: 2 },
@@ -288,7 +287,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.GREY,
   },
   bottom: {
-    backgroundColor: '#EFEFEF',
+    backgroundColor: COLORS.SURFACE,
     paddingTop: 22,
   },
   legend: {
@@ -327,7 +326,7 @@ const styles = StyleSheet.create({
     paddingLeft: 16,
     paddingRight: 12,
     borderRadius: 12,
-    backgroundColor: '#E8E8EE',
+    backgroundColor: COLORS.CHIP,
   },
   chipSpacer: {
     height: 28,
@@ -351,7 +350,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 8,
     justifyContent: 'center',
-    backgroundColor: '#E8E8EE',
+    backgroundColor: COLORS.CHIP,
   },
   totalLabel: {
     fontFamily: 'Poppins_400Regular',
@@ -374,7 +373,7 @@ const styles = StyleSheet.create({
   payLabel: {
     fontFamily: 'Poppins_500Medium',
     fontSize: 15,
-    color: '#FFFFFF',
+    color: COLORS.PURE_WHITE,
   },
   status: {
     flex: 1,

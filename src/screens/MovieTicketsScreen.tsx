@@ -204,7 +204,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.WHITE,
   },
   header: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: COLORS.PURE_WHITE,
   },
   headerBar: {
     minHeight: 72,
@@ -273,7 +273,7 @@ const styles = StyleSheet.create({
     color: COLORS.DARK,
   },
   dateChipLabelSelected: {
-    color: '#FFFFFF',
+    color: COLORS.PURE_WHITE,
   },
   showtimeRow: {
     paddingHorizontal: 24,
@@ -303,7 +303,7 @@ const styles = StyleSheet.create({
     height: 168,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: 'rgba(97,195,242,0.35)',
+    borderColor: COLORS.BLUE_FAINT,
     padding: 10,
     justifyContent: 'center',
   },
@@ -339,7 +339,7 @@ const styles = StyleSheet.create({
   selectSeatsLabel: {
     fontFamily: 'Poppins_500Medium',
     fontSize: 15,
-    color: '#FFFFFF',
+    color: COLORS.PURE_WHITE,
   },
   status: {
     flex: 1,

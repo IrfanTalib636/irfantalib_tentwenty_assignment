@@ -21,7 +21,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { getImageUrl } from '../api/images';
 import { useMovieDetails, useMovieVideos } from '../api/movieQueries';
-import { COLORS } from '../enums/AppEnum';
+import { COLORS, GRADIENTS } from '../enums/AppEnum';
 import type { RootStackParamList } from '../navigation/RootNavigator';
 import {
   DETAIL_COPY,
@@ -151,13 +151,13 @@ export function MovieDetailsScreen() {
               <View style={[styles.heroImage, styles.heroFallback]} />
             )}
             <LinearGradient
-              colors={['rgba(0,0,0,0.82)', 'rgba(0,0,0,0.35)', 'rgba(0,0,0,0)']}
+              colors={GRADIENTS.HERO_TOP}
               locations={[0, 0.55, 1]}
               pointerEvents="none"
               style={[styles.heroTopScrim, { height: insets.top + 88 }]}
             />
             <LinearGradient
-              colors={['rgba(0,0,0,0)', 'rgba(0,0,0,0.55)', 'rgba(0,0,0,0.92)']}
+              colors={GRADIENTS.HERO_BOTTOM}
               locations={[0, 0.45, 1]}
               pointerEvents="none"
               style={styles.heroScrim}
@@ -170,7 +170,7 @@ export function MovieDetailsScreen() {
                 hitSlop={8}
                 style={styles.backButton}
               >
-                <Ionicons name="chevron-back" size={28} color="#FFFFFF" />
+                <Ionicons name="chevron-back" size={28} color={COLORS.PURE_WHITE} />
               </Pressable>
               <Text style={styles.heroTitle}>{DETAIL_COPY.header}</Text>
             </View>
@@ -190,7 +190,7 @@ export function MovieDetailsScreen() {
                 onPress={openTrailer}
                 style={styles.trailer}
               >
-                <Ionicons name="play" size={14} color="#FFFFFF" />
+                <Ionicons name="play" size={14} color={COLORS.PURE_WHITE} />
                 <Text style={styles.trailerLabel}>{DETAIL_COPY.trailer}</Text>
               </Pressable>
               {trailerError ? <Text style={styles.trailerError}>{trailerError}</Text> : null}
@@ -268,7 +268,7 @@ export function MovieDetailsScreen() {
             ) : null}
             {trailerReady ? null : (
               <View style={styles.playerLoading} pointerEvents="none">
-                <ActivityIndicator color="#FFFFFF" />
+                <ActivityIndicator color={COLORS.PURE_WHITE} />
               </View>
             )}
             <Pressable
@@ -278,7 +278,7 @@ export function MovieDetailsScreen() {
               hitSlop={8}
               style={[styles.playerClose, { top: insets.top + 12 }]}
             >
-              <Ionicons name="close" size={28} color="#FFFFFF" />
+              <Ionicons name="close" size={28} color={COLORS.PURE_WHITE} />
             </Pressable>
           </View>
         </Modal>
@@ -369,7 +369,7 @@ const styles = StyleSheet.create({
   heroTitle: {
     fontFamily: 'Poppins_500Medium',
     fontSize: 18,
-    color: '#FFFFFF',
+    color: COLORS.PURE_WHITE,
   },
   heroActions: {
     paddingHorizontal: 36,
@@ -380,13 +380,13 @@ const styles = StyleSheet.create({
     fontFamily: 'Poppins_600SemiBold',
     fontSize: 22,
     lineHeight: 28,
-    color: '#FFFFFF',
+    color: COLORS.PURE_WHITE,
     textAlign: 'center',
   },
   release: {
     fontFamily: 'Poppins_500Medium',
     fontSize: 16,
-    color: '#FFFFFF',
+    color: COLORS.PURE_WHITE,
     textAlign: 'center',
   },
   tickets: {
@@ -399,13 +399,13 @@ const styles = StyleSheet.create({
   ticketsLabel: {
     fontFamily: 'Poppins_500Medium',
     fontSize: 15,
-    color: '#FFFFFF',
+    color: COLORS.PURE_WHITE,
   },
   trailer: {
     height: 48,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: '#FFFFFF',
+    borderColor: COLORS.PURE_WHITE,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -414,21 +414,21 @@ const styles = StyleSheet.create({
   trailerLabel: {
     fontFamily: 'Poppins_500Medium',
     fontSize: 15,
-    color: '#FFFFFF',
+    color: COLORS.PURE_WHITE,
   },
   trailerError: {
     fontFamily: 'Poppins_400Regular',
     fontSize: 12,
-    color: '#FFFFFF',
+    color: COLORS.PURE_WHITE,
     textAlign: 'center',
   },
   player: {
     flex: 1,
-    backgroundColor: '#000000',
+    backgroundColor: COLORS.BLACK,
   },
   playerVideo: {
     flex: 1,
-    backgroundColor: '#000000',
+    backgroundColor: COLORS.BLACK,
   },
   playerLoading: {
     ...StyleSheet.absoluteFill,
@@ -443,7 +443,7 @@ const styles = StyleSheet.create({
     borderRadius: 22,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(0,0,0,0.45)',
+    backgroundColor: COLORS.SCRIM,
   },
   sheet: {
     marginTop: -28,
@@ -474,7 +474,7 @@ const styles = StyleSheet.create({
   chipLabel: {
     fontFamily: 'Poppins_500Medium',
     fontSize: 12,
-    color: '#FFFFFF',
+    color: COLORS.PURE_WHITE,
   },
   body: {
     fontFamily: 'Poppins_400Regular',

@@ -36,7 +36,7 @@ export function TabNavigator() {
       safeAreaInsets={{ bottom: 0 }}
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: '#FFFFFF',
+        tabBarActiveTintColor: COLORS.PURE_WHITE,
         tabBarInactiveTintColor: COLORS.GREY,
         tabBarLabelPosition: 'below-icon',
         tabBarLabelStyle: styles.label,

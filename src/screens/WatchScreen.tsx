@@ -22,7 +22,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getImageUrl } from '../api/images';
 import { useGenreBrowse, useGenreMovies, useMovieSearch, useUpcomingMovies } from '../api/movieQueries';
 import { type GenreCard, type Movie } from '../api/movies';
-import { COLORS } from '../enums/AppEnum';
+import { COLORS, GRADIENTS } from '../enums/AppEnum';
 import type { RootStackParamList } from '../navigation/RootNavigator';
 import {
   firstGenreName,
@@ -78,7 +78,7 @@ function MovieCard({
     >
       {imageUrl ? <Image source={{ uri: imageUrl }} style={styles.image} /> : null}
       <LinearGradient
-        colors={['rgba(0,0,0,0)', 'rgba(0,0,0,0.72)']}
+        colors={GRADIENTS.CARD}
         style={styles.gradient}
       >
         <Text style={styles.cardTitle} numberOfLines={2}>
@@ -149,7 +149,7 @@ function GenreTile({
     >
       {imageUrl ? <Image source={{ uri: imageUrl }} style={styles.image} /> : null}
       <LinearGradient
-        colors={['rgba(0,0,0,0.05)', 'rgba(0,0,0,0.72)']}
+        colors={GRADIENTS.GENRE}
         style={styles.genreGradient}
       >
         <Text style={styles.genreTitle} numberOfLines={2}>
@@ -294,7 +294,7 @@ export function WatchScreen() {
               autoCapitalize="none"
               returnKeyType="go"
               accessibilityLabel="Search movies"
-              underlineColorAndroid="transparent"
+              underlineColorAndroid={COLORS.TRANSPARENT}
             />
             <Pressable
               accessibilityRole="button"
@@ -321,7 +321,7 @@ export function WatchScreen() {
       )}
 
       <LinearGradient
-        colors={[COLORS.LIGHT_GREY, 'rgba(219,219,223,0)']}
+        colors={[COLORS.LIGHT_GREY, COLORS.LIGHT_GREY_FADE]}
         style={styles.body}
       >
       {searchOpen && trimmedSearch.length > 0 ? (
@@ -655,7 +655,7 @@ const styles = StyleSheet.create({
   },
   topResultsRule: {
     height: 1,
-    backgroundColor: 'rgba(46,39,57,0.12)',
+    backgroundColor: COLORS.DARK_FAINT,
   },
   resultsList: {
     paddingHorizontal: 20,
@@ -705,7 +705,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     height: 48,
     borderRadius: 24,
-    backgroundColor: '#E8E8EE',
+    backgroundColor: COLORS.CHIP,
     paddingHorizontal: 14,
     gap: 8,
   },
@@ -765,7 +765,7 @@ const styles = StyleSheet.create({
   cardTitle: {
     fontFamily: 'Poppins_500Medium',
     fontSize: 18,
-    color: '#FFFFFF',
+    color: COLORS.PURE_WHITE,
   },
   genreGradient: {
     position: 'absolute',
@@ -780,7 +780,7 @@ const styles = StyleSheet.create({
   genreTitle: {
     fontFamily: 'Poppins_500Medium',
     fontSize: 16,
-    color: '#FFFFFF',
+    color: COLORS.PURE_WHITE,
   },
   status: {
     flex: 1,

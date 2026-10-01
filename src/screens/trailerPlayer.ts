@@ -1,3 +1,5 @@
+import { COLORS } from '../enums/AppEnum';
+
 const VIDEO_ID = /^[\w-]{6,20}$/;
 
 /** Page origin sent to YouTube. It must be this app, not youtube.com. */
@@ -26,7 +28,7 @@ export function trailerPlayerHtml(videoId: string) {
     <meta name="referrer" content="strict-origin-when-cross-origin" />
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
     <style>
-      html, body { margin: 0; width: 100%; height: 100%; background: #000; overflow: hidden; }
+      html, body { margin: 0; width: 100%; height: 100%; background: ${COLORS.BLACK}; overflow: hidden; }
       iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
     </style>
   </head>
