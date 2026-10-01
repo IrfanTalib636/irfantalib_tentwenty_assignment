@@ -3,7 +3,9 @@ import { fireEvent, render } from '@testing-library/react-native';
 import { useMovieDetails } from '../../api/movieQueries';
 import { DETAIL_COPY } from '../detailContent';
 import { MovieTicketsScreen } from '../MovieTicketsScreen';
-import { formatDateChip, ticketDates } from '../showtimes';
+import { buildShowtimes, dayKey, formatDateChip, ticketDates } from '../showtimes';
+
+const mockNavigate = jest.fn();
 
 jest.mock('@expo/vector-icons', () => ({
   Ionicons: () => null,
@@ -14,7 +16,7 @@ jest.mock('expo-status-bar', () => ({
 }));
 
 jest.mock('@react-navigation/native', () => ({
-  useNavigation: () => ({ goBack: jest.fn() }),
+  useNavigation: () => ({ goBack: jest.fn(), navigate: mockNavigate }),
   useRoute: () => ({ params: { movieId: 11 } }),
 }));
 
@@ -63,6 +65,16 @@ describe('MovieTicketsScreen', () => {
     expect(getAllByText(/Cinetech \+ Hall/).length).toBeGreaterThanOrEqual(4);
     expect(getAllByText(/Cinetech \+ Hall/).length).toBeLessThanOrEqual(5);
     expect(getByText('Select Seats')).toBeTruthy();
+
+    const showtime = buildShowtimes(11, dates[0])[0];
+    await fireEvent.press(getByText('Select Seats'));
+
+    expect(mockNavigate).toHaveBeenCalledWith('SeatMap', {
+      movieId: 11,
+      date: dayKey(dates[0]),
+      time: showtime.time,
+      hall: showtime.hall,
+    });
 
     await fireEvent.press(getByLabelText(formatDateChip(dates[1])));
 

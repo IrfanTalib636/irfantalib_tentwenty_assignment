@@ -39,27 +39,30 @@ export function MovieTicketsScreen() {
   const [selectedShowtimeId, setSelectedShowtimeId] = useState<string | null>(null);
   const selectedDate = dates.find((date) => dayKey(date) === selectedDay) ?? dates[0];
   const showtimes = buildShowtimes(movieId, selectedDate);
-  const activeShowtimeId = selectedShowtimeId ?? showtimes[0]?.id;
+  const activeShowtime =
+    showtimes.find((showtime) => showtime.id === selectedShowtimeId) ?? showtimes[0];
   const cardWidth = Math.min(Math.max(width * 0.68, 220), 300);
 
   return (
-    <View style={[styles.screen, { paddingTop: insets.top }]}>
+    <View style={styles.screen}>
       <StatusBar style="dark" />
-      <View style={styles.header}>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Go back"
-          onPress={() => navigation.goBack()}
-          hitSlop={8}
-          style={styles.backButton}
-        >
-          <Ionicons name="chevron-back" size={26} color={COLORS.DARK} />
-        </Pressable>
-        <View style={styles.headerCopy}>
-          <Text style={styles.title} numberOfLines={2}>
-            {movie?.title ?? 'Get Tickets'}
-          </Text>
-          {movie ? <Text style={styles.release}>{formatInTheaters(movie.release_date)}</Text> : null}
+      <View style={[styles.header, { paddingTop: insets.top }]}>
+        <View style={styles.headerBar}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Go back"
+            onPress={() => navigation.goBack()}
+            hitSlop={8}
+            style={styles.backButton}
+          >
+            <Ionicons name="chevron-back" size={26} color={COLORS.DARK} />
+          </Pressable>
+          <View style={styles.headerCopy}>
+            <Text style={styles.title} numberOfLines={2}>
+              {movie?.title ?? 'Get Tickets'}
+            </Text>
+            {movie ? <Text style={styles.release}>{formatInTheaters(movie.release_date)}</Text> : null}
+          </View>
         </View>
       </View>
 
@@ -124,7 +127,7 @@ export function MovieTicketsScreen() {
                 key={showtime.id}
                 showtime={showtime}
                 width={cardWidth}
-                selected={showtime.id === activeShowtimeId}
+                selected={showtime.id === activeShowtime?.id}
                 onPress={() => setSelectedShowtimeId(showtime.id)}
               />
             ))}
@@ -133,7 +136,23 @@ export function MovieTicketsScreen() {
       ) : null}
 
       <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, 16) }]}>
-        <Pressable accessibilityRole="button" style={styles.selectSeats}>
+        <Pressable
+          accessibilityRole="button"
+          disabled={!movie || !activeShowtime}
+          onPress={() => {
+            if (!movie || !activeShowtime) {
+              return;
+            }
+
+            navigation.navigate('SeatMap', {
+              movieId: movie.id,
+              date: selectedDay,
+              time: activeShowtime.time,
+              hall: activeShowtime.hall,
+            });
+          }}
+          style={styles.selectSeats}
+        >
           <Text style={styles.selectSeatsLabel}>Select Seats</Text>
         </Pressable>
       </View>
@@ -185,17 +204,20 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.WHITE,
   },
   header: {
+    backgroundColor: '#FFFFFF',
+  },
+  headerBar: {
     minHeight: 72,
     justifyContent: 'center',
     paddingHorizontal: 56,
-    paddingBottom: 8,
+    paddingBottom: 12,
   },
   backButton: {
     position: 'absolute',
     left: 8,
-    top: 8,
+    top: 0,
+    bottom: 12,
     width: 44,
-    height: 44,
     alignItems: 'center',
     justifyContent: 'center',
   },
